@@ -1,0 +1,33 @@
+#ifndef __IPCTOOLS_SHARED_QUEUE_H__
+#define __IPCTOOLS_SHARED_QUEUE_H__
+
+#include "allocator_shm.h"
+#include "shared_in_list.h"
+
+#include "event_handler.h"
+
+typedef ipt_shared_in_list_node_t ipt_shared_queue_node_t; 
+typedef struct ipt_shared_queue_t ipt_shared_queue_t;
+
+struct ipt_shared_queue_t
+{
+	int (*get_fd)(ipt_shared_queue_t *this);
+
+	void (*enqueue)(ipt_shared_queue_t *this, ipt_shared_queue_node_t *ptr);
+
+	ipt_shared_queue_node_t * (*dequeue)(ipt_shared_queue_t *this);
+
+	ipt_shared_queue_node_t * (*dequeue_timed)(ipt_shared_queue_t *this, const ipt_time_value_t *tv);
+
+	void (*dump_stats)(ipt_shared_queue_t *this);
+};
+
+ipt_shared_queue_t * ipt_shared_queue_create(const char *name, ipt_allocator_t *alloc_ptr);
+
+ipt_shared_queue_t * ipt_shared_queue_attach(const char *name, ipt_allocator_t *alloc_ptr);
+
+void ipt_shared_queue_destroy(ipt_shared_queue_t *this);
+
+void ipt_shared_queue_for_each(ipt_shared_queue_t *this, void (*func)(const ipt_shared_queue_node_t *const , void *), void *in_ptr);
+
+#endif

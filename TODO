@@ -1,0 +1,6 @@
+1. Need to add destroy to shared objects. Life-cycle currently not working.
+2. Add policy to process manager. RESTART, RESTART_DELAY
+3. Add coalesce to allocators.
+4. Add buddy allocator.
+5. Implement deregister object in allocator.
+6. remove all upcalls to user functions from shared memory ( i.e for_each, etc. ). This creates issues with semaphores.

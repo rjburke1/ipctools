@@ -1,0 +1,8 @@
+ipctool-0.1
+--------------------------------------------------------
+
+10-30-09
+	initial release
+
+11-26-09
+	Added support for signal handling.

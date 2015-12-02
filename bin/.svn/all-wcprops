@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 32
+/svnroot/ipctools/!svn/ver/2/bin
+END
+build_source_forge_release
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svnroot/ipctools/!svn/ver/2/bin/build_source_forge_release
+END

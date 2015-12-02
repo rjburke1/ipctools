@@ -1,0 +1,47 @@
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "allocator_shm.h"
+#include "shared_queue.h"
+#include "process_monitor.h"
+#include "logger.h"
+
+int main ( int argc, char *argv[])
+{
+
+	/*
+	 * Set the umask to 0777 so any process can read and write to the queues, etc.
+	 */
+	umask(0000);
+
+	/* Create the shared memory allocator */
+	ipt_allocator_t *alloc_ptr = ipt_allocator_shm_create(1024 *1024, 5000);
+
+	if ( alloc_ptr == NULL )
+	{
+		printf("Failed to allocate the shared allocator for the service engine\n");
+		return -1;
+	}
+
+	void *ptr = NULL;
+
+	/* Create process monitoring */
+	ipt_process_monitor_t *pm_ptr = ipt_process_monitor_create("ipt_process_monitor_t",alloc_ptr);
+
+	if ( pm_ptr == NULL )
+	{
+		printf("Failed to create ipt_process_monitor_t\n");
+		return -1;
+	}
+
+	ipt_logger_t *lg_ptr = ipt_logger_create("ipt_logger_t", alloc_ptr);
+
+	if ( lg_ptr == NULL )
+	{
+		printf("Failed to create the logger.\n");
+		return -1;
+	}
+
+	return 0;
+}
+

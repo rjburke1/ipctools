@@ -1,0 +1,6 @@
+#ifndef IPT_TEST_CONFIG_H__
+#define IPT_TEST_CONFIG_H__
+
+#define IPT_TEST_ALLOCATOR_SHM_KEY (5000)
+
+#endif

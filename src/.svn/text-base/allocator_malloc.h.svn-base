@@ -1,0 +1,13 @@
+#ifndef __IPCTOOLS_ALLOCATOR_MALLOC_H__
+#define __IPCTOOLS_ALLOCATOR_MALLOC_H__
+
+#include "allocator.h"
+
+/*
+ * Class level operations.
+ */
+cn_allocator_t * cn_allocator_malloc_create(unsigned int size);
+
+cn_allocator_t * cn_allocator_malloc_attach(void *base_address);
+
+#endif

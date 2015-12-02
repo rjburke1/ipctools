@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svnroot/ipctools/!svn/ver/27/examples/logger
+END
+Makefile.in
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svnroot/ipctools/!svn/ver/27/examples/logger/Makefile.in
+END
+handler.h
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svnroot/ipctools/!svn/ver/16/examples/logger/handler.h
+END
+main.c
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svnroot/ipctools/!svn/ver/16/examples/logger/main.c
+END
+Makefile.am
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svnroot/ipctools/!svn/ver/27/examples/logger/Makefile.am
+END
+handler.c
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svnroot/ipctools/!svn/ver/20/examples/logger/handler.c
+END

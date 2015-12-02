@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svnroot/ipctools/!svn/ver/27/examples/shm_init
+END
+Makefile.in
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svnroot/ipctools/!svn/ver/27/examples/shm_init/Makefile.in
+END
+main.c
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svnroot/ipctools/!svn/ver/16/examples/shm_init/main.c
+END
+Makefile.am
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svnroot/ipctools/!svn/ver/27/examples/shm_init/Makefile.am
+END

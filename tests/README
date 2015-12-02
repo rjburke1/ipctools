@@ -1,0 +1,4 @@
+1. The shared memory tests do not cleanup the shared memory segments or named pipes. Run the following:
+ipcrm -M 0x00001388
+rm /tmp/*.db
+

@@ -1,0 +1,42 @@
+#ifndef __IPCTOOLS_PROCESS_MONITOR_H__
+#define __IPCTOOLS_PROCESS_MONITOR_H__
+
+#include "event_handler.h"
+#include "allocator_shm.h"
+
+typedef struct ipt_process_monitor_t ipt_process_monitor_t;
+
+typedef struct process_monitor_entry_t process_monitor_entry_t;
+
+struct process_monitor_entry_t
+{
+	char name[32];
+	char path[256];
+	char argv[16][32];
+	unsigned int pid;
+	unsigned int update_time;
+	unsigned int expire_interval;
+	int in_use;
+};
+
+struct ipt_process_monitor_t
+{
+	ipt_event_handler_t eh;
+
+	int (*set_expire_interval)(ipt_process_monitor_t *this, const char *process_name, unsigned int expire_interval);
+
+	int (*register_process)(ipt_process_monitor_t *this, const char *process_name, const char *path, const char *const argv[]);
+
+	int (*remove_process)(ipt_process_monitor_t *this, const char *process_name);
+
+	void (*dump_stats)(ipt_process_monitor_t *this);
+
+};
+
+ipt_process_monitor_t *ipt_process_monitor_create(const char *name, ipt_allocator_t *alloc_ptr);
+
+ipt_process_monitor_t *ipt_process_monitor_attach(const char *name, ipt_allocator_t *alloc_ptr);
+
+void for_each(ipt_process_monitor_t *this, void (*func)(const process_monitor_entry_t *const entry, const void *data), const void *data);
+
+#endif
