@@ -11,6 +11,7 @@
 
 char *name;
 char *pname;
+int update_time = 1;
 
 ipt_process_monitor_t *pm_ptr;
 
@@ -26,22 +27,23 @@ static int count = 0;
 
 	printf("handl_timeout: update timer\n");
 
-	((ipt_process_monitor_t*)act)->set_expire_interval((ipt_process_monitor_t*)act,pname,count++);
+	((ipt_process_monitor_t*)act)->still_alive((ipt_process_monitor_t*)act,pname);
 
 	return 0;
 }
 static void
 help(void)
 {
-        fprintf(stderr,"usage : vew_logs -n [name] -p [pname]\n");
+        fprintf(stderr,"usage : process_monitored -n [name] -p [pname] -t [utime]\n");
         fprintf(stderr,"name    : Name of the process manager registered with the allocator.\n");
         fprintf(stderr,"pname   : Name of the process manager registered with the allocator.\n");
+        fprintf(stderr,"utime   : The interval that the process updates its activity timer.\n");
 }
 static int
 parse_and_init_args(int argc,  char * const argv[])
 {
         int c;
-        while ((c = getopt (argc, argv, "n:p:?")) != -1)
+        while ((c = getopt (argc, argv, "n:p:t:?")) != -1)
          {
                 switch (c)
                 {
@@ -51,6 +53,10 @@ parse_and_init_args(int argc,  char * const argv[])
 
                         case 'p':
                                 pname = optarg;
+                        break;
+
+                        case 't':
+                                update_time = atol(optarg);
                         break;
 
                         case '?':
@@ -104,7 +110,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	ipt_time_value_t tv = { 1, 0 };
+	ipt_time_value_t tv = { update_time, 0 };
 
 	if ( reactor->schedule_timer(reactor,(ipt_event_handler_t *) &handler, NULL, &tv, pm_ptr ) < 0 )
 	{

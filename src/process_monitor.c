@@ -198,6 +198,34 @@ register_process(private_process_monitor_t *this, const char *name, const char *
 	return 0;
 }
 static int
+still_alive(private_process_monitor_t *this, const char *process_name)
+{
+
+	if ( process_name == NULL || strlen(process_name) + 1 > 256 )
+	{
+		return -1;
+	}
+
+	sem_wait(&this->sd_ptr->sem);
+
+	process_monitor_entry_t *e_ptr = find_entry(this, match_process_name, (void*)process_name);
+
+	if ( e_ptr == NULL )
+	{
+		sem_post(&this->sd_ptr->sem);
+		return -1;
+	}
+
+	struct timespec tp;
+	clock_gettime(CLOCK_MONOTONIC,&tp);
+
+	e_ptr->update_time = tp.tv_sec;
+
+	sem_post(&this->sd_ptr->sem);
+
+	return 0;
+}
+static int
 set_expire_interval(private_process_monitor_t *this, const char *process_name, unsigned int expire_interval)
 {
 	if ( process_name == NULL || strlen(process_name) + 1 > 256 )
@@ -216,8 +244,6 @@ set_expire_interval(private_process_monitor_t *this, const char *process_name, u
 	}
 
 	e_ptr->expire_interval = expire_interval;
-
-        printf("set_expire_interval int(%i) name(%s)\n", e_ptr->expire_interval, e_ptr->name);
 
 	sem_post(&this->sd_ptr->sem);
 
@@ -308,7 +334,9 @@ ipt_process_monitor_t * ipt_process_monitor_create(const char *name, ipt_allocat
 	}
 
 	this->public.set_expire_interval = (int (*)(ipt_process_monitor_t *this, const char *, unsigned int)) set_expire_interval;
-	this->public.register_process    = (int (*)(ipt_process_monitor_t *this,const char *, const char *, const char *const[])) register_process;
+	this->public.still_alive = (int (*)(ipt_process_monitor_t *this, const char *)) still_alive;
+	this->public.register_process    = 
+		(int (*)(ipt_process_monitor_t *this,const char *, const char *, const char *const[])) register_process;
 	this->public.remove_process      = (int (*)(ipt_process_monitor_t *this, const char *)) remove_process;
 	this->public.dump_stats          = (void (*)(ipt_process_monitor_t *this)) dump_stats;
 
@@ -352,6 +380,7 @@ ipt_process_monitor_t * ipt_process_monitor_attach(const char *name, ipt_allocat
         }
 
 	this->public.set_expire_interval  = (int (*)(ipt_process_monitor_t *this, const char *, unsigned int)) set_expire_interval;
+	this->public.still_alive  = (int (*)(ipt_process_monitor_t *this, const char *)) still_alive;
 	this->public.register_process     = (int (*)(ipt_process_monitor_t *this,const char *, const char *, const char*const [])) register_process;
 	this->public.remove_process       = (int (*)(ipt_process_monitor_t *this, const char *)) remove_process;
 	this->public.dump_stats           = (void (*)(ipt_process_monitor_t *this)) dump_stats;

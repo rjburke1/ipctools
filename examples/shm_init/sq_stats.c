@@ -8,7 +8,7 @@
 #include <semaphore.h>
 
 
-char *name;
+char *name = NULL;
 
 help(void)
 {
@@ -52,6 +52,7 @@ ipt_shared_queue_t *sq_ptr;
 	if ( parse_and_init_args(argc,argv) )
 	{
 		printf("failed to parse arguments\n");
+		help();
 		return 1;
 	}
 

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 
 #include "allocator_shm.h"
@@ -17,30 +18,34 @@ struct handler
 };
 
 static void
-print_in_use_entry(process_monitor_entry_t *const entry, const void *data)
+print_in_use_entry(const process_monitor_entry_t *const entry, const void *data)
 {
 	if ( !entry->in_use ) return;
+
+        struct timespec tp;
+        clock_gettime(CLOCK_MONOTONIC,&tp);
 
 	printf("Process Monitor Entry[\n");
 	printf("\tname=%s\n",entry->name);
 	printf("\tpid=%i\n",entry->pid);
 	printf("\tupdate_time=%d\n",entry->update_time);
 	printf("\texpire_interval=%d\n",entry->expire_interval);
-
+	printf("\ttotal time since last update %ld\n", tp.tv_sec - entry->update_time);
+	printf("]\n");
 }
 
 static int
 handle_timeout(ipt_event_handler_t *this, const ipt_time_value_t *curr_time, const void *act)
 {
-	ipt_process_monitor_for_each( pm_ptr, print_in_use_entry, act); 
+	ipt_process_monitor_for_each( pm_ptr, print_in_use_entry, act);
 
 	return 0;
 }
 static void
 help(void)
 {
-        fprintf(stderr,"usage : vew_logs -n [name]\n");
-        fprintf(stderr,"name    : Name of the logger registered with the allocator.\n");
+        fprintf(stderr,"usage : process_monitor -n [name]\n");
+        fprintf(stderr,"name  : Name of the logger registered with the allocator.\n");
 }
 static int
 parse_and_init_args(int argc, char *argv[])
