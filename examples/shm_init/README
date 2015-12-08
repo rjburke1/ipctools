@@ -1,0 +1,56 @@
+alloc_stats: View the allocator statistics
+sq_stats   : View the shared queue statistics 
+shm_init   : Create the shared memory segments
+
+
+shm_init
+--------
+The shared memory segements are created by the shm_init function. This is generally run at boot up and sets everything up for
+the subsequent processes to simply attach to the existing memory segments. This is a simple way to avoid complicated logic to handle
+startup sequencing. The shm_init creates the following shared objects
+
+shared allocator       (name=ipt_allocator_t, KEY =IPT_TEST_ALLOCATOR_SHM_KEY)
+shared logger          (name=ipt_logger_t, allocater=ipt_allocator_t), 
+	->shared_queue (name=ipt_logger_t.sq, allocator=ipt_allocator_t,db=ipt_logger_t.sq.db)
+shared process monitor (name=ipt_process_monitor_t, allocator=ipt_allocator_t)
+
+The creation of the logger creates a shared queue and associated doorbell.
+
+The shared memory segments can be removed by executing the ipcrm -m <key>. To view the shared memory segments use the following command:
+
+ipcs 
+
+This will show something like the following:
+
+   key      shmid     owner      perm        size    nattach  status
+0x00001388 3014669    bob        777        1048672    0
+
+to remove the sharmed memory segement
+
+ipcrm -k 0x00001388
+
+
+You should always delete the shared memory segement and named pipe before re-running shm_init. 
+
+ipcrm -k 0x00001388; rm -r /tmp/*.db;./shm_init
+
+sq_stats
+-------
+
+This program access the shared queue and prints out basic statistics.
+
+sq_stats -n ipt_logger_t.sq
+
+
+alloc_stats
+----------
+
+This program prints out basic statistics of the shared allocator.
+
+alloc_stats -n ipt_allocator_t
+
+It will print out the block allocations, free lists, and registered objects. The list
+of registered objects should be ipt_logger_t, ipt_process_monitor_t, and ipt_logger_t.sq.
+
+When an object is created with an allocator, it registers a well-known name so it can be accessed from another process.
+
