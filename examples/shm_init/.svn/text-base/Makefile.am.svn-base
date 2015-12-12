@@ -1,5 +1,0 @@
-LDADD = -lipctools -lrt
-AM_LDFLAGS = -L$(top_builddir)/src
-AM_CFLAGS = -I$(top_srcdir)/src
-bin_PROGRAMS = shm_init
-shm_init_SOURCES = main.c

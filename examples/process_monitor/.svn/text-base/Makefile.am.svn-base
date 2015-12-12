@@ -1,6 +1,0 @@
-INCLUDES = -I$(top_srcdir)/src $(includeopt)
-LDADD = -lipctools -lrt
-AM_LDFLAGS = -L$(top_builddir)/src
-AM_CFLAGS = -I$(top_srcdir)/src
-bin_PROGRAMS = process_monitor
-process_monitor_SOURCES = main.c
