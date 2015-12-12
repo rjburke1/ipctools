@@ -32,10 +32,10 @@ help(void)
 }
 
 static int
-parse_and_init_args(int argc, char *argv[])
+parse_and_init_args(int argc, const char * const argv[])
 {
 	int c;
-	while ((c = getopt (argc, argv, "l:s:r:?")) != -1)
+	while ((c = getopt (argc, (char * const *)argv, "l:s:r:?")) != -1)
          {
 		switch (c)
         	{
@@ -94,7 +94,7 @@ parse_and_init_args(int argc, char *argv[])
 	return 0;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char * const argv[])
 {
 	const char *process_name = "logger";
 
