@@ -93,10 +93,10 @@ static void
 dump_stats(private_shared_queue_t *this)
 {
 	printf("doorbell active [%s]\n",this->sd_ptr->active_doorbell ? "true": "false");
-	printf("number writes %ld\n",this->sd_ptr->writes);
-	printf("number reads  %ld\n",this->sd_ptr->reads);
-	printf("high water  (%ld,%ld)\n",this->sd_ptr->high_water, this->sd_ptr->writes - this->sd_ptr->reads);
-	printf("number elements %ld\n",this->sl_ptr->count(this->sl_ptr));
+	printf("number writes %zu\n",this->sd_ptr->writes);
+	printf("number reads  %zu\n",this->sd_ptr->reads);
+	printf("high water  (%zu,%zu)\n",this->sd_ptr->high_water, this->sd_ptr->writes - this->sd_ptr->reads);
+	printf("number elements %zu\n",this->sl_ptr->count(this->sl_ptr));
 }
 
 static void 
@@ -126,8 +126,6 @@ static void enqueue(private_shared_queue_t *this, ipt_shared_queue_node_t *ptr)
 
 	update_doorbell(this);
 
-	int sval;sem_getvalue(&this->sd_ptr->sem,&sval);printf("enqueue sem(0,%i)\n",sval);
-
 	sem_post(&this->sd_ptr->sem);
 }
 
@@ -149,8 +147,6 @@ static ipt_shared_queue_node_t * dequeue(private_shared_queue_t *this)
         }
 
 	sem_wait(&this->sd_ptr->sem);
-
-	int sval;sem_getvalue(&this->sd_ptr->sem,&sval);printf("dequeue sem(0,%i)\n",sval);
 
    	this->sd_ptr->active_doorbell = 0;
 

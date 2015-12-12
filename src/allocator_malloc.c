@@ -134,7 +134,7 @@ static void print_registered_object(struct reg_obj *ptr)
 }
 static void print_free_block(struct __node__ *ptr)
 {
-		printf("Block[begin:%p, end:%p, prev:%p, next:%p size:%ld]\n",ptr, 
+		printf("Block[begin:%p, end:%p, prev:%p, next:%p size:%zu]\n",ptr, 
 			ipt_add_offset((char *)ptr,ptr->size), 
 			ipt_op_drf(&ptr->prev),
 			ipt_op_drf(&ptr->next),
@@ -416,7 +416,6 @@ find_registered_object(private_allocator_t *this, const char *name)
                 cur_ptr !=  (struct __node__ *) &this->sd_ptr->__null__;
                 cur_ptr = ( struct __node__ *) ipt_op_drf(&cur_ptr->next) )
         {
-			printf("found it\n");fflush(stdout);
 		struct reg_obj *r_ptr = (struct reg_obj *)cur_ptr;
 		if ( !strcmp(name, (char *) ipt_op_drf( &((struct reg_obj *)cur_ptr)->name) ) )
 		{
@@ -431,7 +430,7 @@ static void
 dump_stats(private_allocator_t *this)
 {
  struct __node__ *cur_ptr;
-        long remaining;
+        size_t remaining;
         size_t overhead;
 
         overhead = sizeof(struct __node__) * (this->sd_ptr->num_blocks_allocated);
@@ -439,11 +438,11 @@ dump_stats(private_allocator_t *this)
         remaining =  this->sd_ptr->size - this->sd_ptr->bytes_allocated - overhead;
 
         fprintf(stdout,"Allocator[\n");
-        fprintf(stdout,"\tsize = %ld\n",this->sd_ptr->size);
-        fprintf(stdout,"\tbytes allocated = %ld\n",this->sd_ptr->bytes_allocated);
-        fprintf(stdout,"\tblocks allocated = %ld\n",this->sd_ptr->num_blocks_allocated);
-        fprintf(stdout,"\tbytes remaining = %ld\n",remaining <= 0 ? 0 : remaining);
-        fprintf(stdout,"\toverhead/block = %lu bytes\n",sizeof(struct __node__));
+        fprintf(stdout,"\tsize = %zu\n",this->sd_ptr->size);
+        fprintf(stdout,"\tbytes allocated = %zu\n",this->sd_ptr->bytes_allocated);
+        fprintf(stdout,"\tblocks allocated = %zu\n",this->sd_ptr->num_blocks_allocated);
+        fprintf(stdout,"\tbytes remaining = %zu\n",remaining <= 0 ? 0 : remaining);
+        fprintf(stdout,"\toverhead/block = %zu bytes\n",sizeof(struct __node__));
         fprintf(stdout,"\tefficiency          = %2.2f \n", (1 - overhead*1.0/this->sd_ptr->size)*100);
 
         fprintf(stdout,"Blocks on Free List ... \n");

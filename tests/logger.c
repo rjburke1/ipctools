@@ -77,7 +77,6 @@ test_1()
 
       		wait(&status);
 
-                printf("%i\n",status);fflush(stdout);
       		assert( WEXITSTATUS(status) == 0 );
    	}
 }

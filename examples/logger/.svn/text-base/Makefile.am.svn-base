@@ -1,5 +1,0 @@
-LDADD = -lipctools -lrt
-AM_LDFLAGS = -L$(top_builddir)/src
-AM_CFLAGS = -I$(top_srcdir)/src
-bin_PROGRAMS = logger 
-logger_SOURCES = main.c handler.c
