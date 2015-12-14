@@ -2,3 +2,40 @@ The shared memory tests do not cleanup the shared memory segments or named pipes
 ipcrm -M 0x00001388
 rm /tmp/*.db
 
+allocator_shm: Test the shared memory allocator. Rremove shared memory segment before running. ( ipcrm -M 0x00001388 )
+allocator_malloc: Heap allocator that is used to test memory allocation algorithms. The allocator_shm and allocator_malloc
+                  are really identical, except that allocator_shm uses semaphores.
+logger : This method starts a client process and sends messages to the logger parent.
+offset_ptr : This tests the offset pointer logic used to ensure that all objects in the allocator are located by offsets.
+reactor : Test starting a child process and sending an event to the parent child. The reactor will handle it.
+reactor_notify: Test the reactor notifications.
+reactor_signal: Test the reactor signal handling.
+reactor_timer: Test the reactor timers.
+shared_in_list: Test the intrusive list stored in shared memory. The linkage is stored as well.
+shared_queue: Test a queue in shared memory. This is analgous to the message queue in linux.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TODO
+
+1. Consolidate the allocators to use inheritence. There is alot of redundant code between the two.
+2. Fix the memove of shm allocator to the heap. This test should be used to validate all relative pointer. For some reason the registered objects
+   are not being moved correctly? This works for allocator_malloc? Not sure why.
+
+

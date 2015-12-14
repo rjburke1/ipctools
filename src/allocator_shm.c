@@ -599,6 +599,28 @@ static void * get_shared_ptr(private_allocator_t *this)
 {
         return (void *)this->sd_ptr;
 }
+static size_t free_blocks(private_allocator_t *this)
+{
+        size_t count = 0;
+        struct __node__ *cur_ptr;
+
+        for (   cur_ptr = ( struct __node__ *) ipt_op_drf(&this->sd_ptr->free_list_head);
+                cur_ptr != (struct __node__ *) &this->sd_ptr->__null__;
+                cur_ptr = ( struct __node__ *) ipt_op_drf(&cur_ptr->next) )
+        {
+                count++;
+        }
+        return count;
+}
+
+static size_t
+bytes_remaining(private_allocator_t *this)
+{
+   return this->sd_ptr->size -
+          this->sd_ptr->bytes_allocated -
+          sizeof( struct __node__) * this->sd_ptr->num_blocks_allocated;
+}
+
 
 ipt_allocator_t * ipt_allocator_shm_create(size_t size, ipt_allocator_shm_key_t id)
 {
@@ -648,6 +670,8 @@ void *base_address;
         this->public.get_size = (size_t (*)(ipt_allocator_t *) ) get_size;
 	this->public.destroy = (void (*)(ipt_allocator_t*) ) destroy;
         this->public.get_shared_ptr = (void * (*)(ipt_allocator_t*) ) get_shared_ptr;
+        this->public.bytes_remaining = (size_t (*)(ipt_allocator_t*) ) bytes_remaining;
+        this->public.free_blocks = (size_t (*)(ipt_allocator_t*) ) free_blocks;
 
 
         /* Start the free list after the private_allocator_t */
@@ -717,6 +741,8 @@ void *base_address;
         this->public.get_size = (size_t (*)(ipt_allocator_t *) ) get_size;
 	this->public.destroy = (void (*)(ipt_allocator_t*) ) destroy;
         this->public.get_shared_ptr = (void * (*)(ipt_allocator_t*) ) get_shared_ptr;
+        this->public.bytes_remaining = (size_t (*)(ipt_allocator_t*) ) bytes_remaining;
+        this->public.free_blocks = (size_t (*)(ipt_allocator_t*) ) free_blocks;
 
 
 	return (ipt_allocator_t *) this;

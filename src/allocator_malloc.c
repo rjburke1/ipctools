@@ -174,239 +174,312 @@ static unsigned int ipt_allocator_overhead(void)
 	return sizeof(private_allocator_t) + sizeof(struct __node__);
 }
 
-static void * 
+static void *
 private_malloc(private_allocator_t *this, size_t size)
 {
-        /* Align the block on 8 bytes */
-	size = size % sizeof(ptrdiff_t)  == 0 ? size : size - size % sizeof(ptrdiff_t) + sizeof(ptrdiff_t) ;
+        struct __node__ *cur_ptr;
 
-	struct __node__ *cur_ptr;
+        /* Align the block on sizeof(ptrdiff_t) bytes */
+        size = size % sizeof(ptrdiff_t)  == 0 ? size : size - size % sizeof(ptrdiff_t) + sizeof(ptrdiff_t) ;
 
-	/* Walked the free list and find a chunck big enough */
-	for (   cur_ptr  = (struct __node__ *) ipt_op_drf(&this->sd_ptr->free_list_head); 
-		cur_ptr != (struct __node__ *) &this->sd_ptr->__null__; 
-		cur_ptr  = (struct __node__ *)ipt_op_drf(&cur_ptr->next) )
-  {
-		if ( cur_ptr->size < sizeof(struct __node__) + size ) continue;
+        /* Walked the free list and find a chunck big enough */
+        for (   cur_ptr  = (struct __node__ *) ipt_op_drf(&this->sd_ptr->free_list_head);
+                cur_ptr != (struct __node__ *) &this->sd_ptr->__null__;
+                cur_ptr  = (struct __node__ *)ipt_op_drf(&cur_ptr->next) )
+        {
+                if ( cur_ptr->size < sizeof(struct __node__) + size ) continue;
 
-		/* Split the block by pulling chunk off bottom */	
-		struct __node__ *n_ptr = 
-			(struct __node__ *) (ipt_add_offset((char *)cur_ptr, cur_ptr->size - size - sizeof( struct __node__ )));
+                /* Split the block by pulling chunk off bottom */
+                struct __node__ *n_ptr =
+                        (struct __node__ *) (ipt_add_offset((char *)cur_ptr, cur_ptr->size - size - sizeof( struct __node__ )));
 
-		this->sd_ptr->bytes_allocated += size;
+                this->sd_ptr->bytes_allocated += size;
 
-		this->sd_ptr->num_blocks_allocated++;
+                this->sd_ptr->num_blocks_allocated++;
 
-		cur_ptr->size -= (sizeof( struct __node__) + size);
+         	cur_ptr->size -= (sizeof( struct __node__) + size);
 
-		n_ptr->size = sizeof(struct __node__) + size;
+                n_ptr->size = sizeof(struct __node__) + size;
 
-      		/* Special Case where size matches exactly */
-		if ( cur_ptr->size ==  sizeof(struct __node__) + size )
-		{
+                /* Special Case where size matches exactly */
+                if ( cur_ptr->size ==  sizeof(struct __node__) + size )
+                {
 
-			/*      addr a      <     addr b     <  addr c    
-			 *  ---------------- ---------------- ----------------
-			 * |                |                |                |
-			 * |      next ---> |      next ---> |      next ---> |
-			 * | <--- prev      | <--- prev      | <--- prev      |
-			 * |                |                |                |
-			 *  ---------------- ---------------- ----------------
-			 *                         ^                 
-			 *                      (cur_ptr)          
-			 */
-                         if ( ipt_op_drf(&cur_ptr->prev) != &this->sd_ptr->__null__ )
-                         {
-                            ipt_op_set(&((struct __node__ *)ipt_op_drf(&cur_ptr->prev))->next, ipt_op_drf(&cur_ptr->next));
-                         }
-
-         		if ( ipt_op_drf(&cur_ptr->next) != &this->sd_ptr->__null__)
+                        /*      addr a      <     addr b     <  addr c    
+                         *  ---------------- ---------------- ----------------
+                         * |                |                |                |
+                         * |      next ---> |      next ---> |      next ---> |
+                         * | <--- prev      | <--- prev      | <--- prev      |
+                         * |                |                |                |
+                         *  ---------------- ---------------- ----------------
+                         *                         ^                 
+                         *                      (cur_ptr)          
+                         */
+                        if ( ipt_op_drf(&cur_ptr->prev) != &this->sd_ptr->__null__ )
                         {
-                           ipt_op_set(&((struct __node__ *)ipt_op_drf(&cur_ptr->next))->prev, ipt_op_drf(&cur_ptr->prev)); 
+                                ipt_op_set(&((struct __node__ *)ipt_op_drf(&cur_ptr->prev))->next, ipt_op_drf(&cur_ptr->next));
                         }
 
-			/* Update head and tail pointers  */
-			if ( (struct __node__ *) ipt_op_drf(&this->sd_ptr->free_list_head) == cur_ptr )
-			{
-				ipt_op_set(&this->sd_ptr->free_list_head, ipt_op_drf(&cur_ptr->prev));
-			}
+                        if ( ipt_op_drf(&cur_ptr->next) != &this->sd_ptr->__null__)
+                        {
+                                ipt_op_set(&((struct __node__ *)ipt_op_drf(&cur_ptr->next))->prev, ipt_op_drf(&cur_ptr->prev));
+                        }
 
-			if ( (struct __node__ *) ipt_op_drf(&this->sd_ptr->free_list_tail) == cur_ptr )
-			{
-				ipt_op_set(&this->sd_ptr->free_list_tail, ipt_op_drf(&cur_ptr->next));
-			}
+                        /* Update head and tail pointers  */
+                        if ( (struct __node__ *) ipt_op_drf(&this->sd_ptr->free_list_head) == cur_ptr )
+                        {
+                                ipt_op_set(&this->sd_ptr->free_list_head, ipt_op_drf(&cur_ptr->prev));
+                        }
 
-		}
-		return (void *)ipt_add_offset((char *)n_ptr, sizeof(struct __node__));
-	}
+                        if ( (struct __node__ *) ipt_op_drf(&this->sd_ptr->free_list_tail) == cur_ptr )
+                        {
+                                ipt_op_set(&this->sd_ptr->free_list_tail, ipt_op_drf(&cur_ptr->next));
+                        }
 
-	return NULL;
+                }
+                sem_post(&this->sd_ptr->sem);
+                return (void *)ipt_add_offset((char *)n_ptr, sizeof(struct __node__));
+        }
+
+        return NULL;
 }
 static void
 private_free(private_allocator_t *this, void *ptr)
 {
+        sem_wait(&this->sd_ptr->sem);
 
+        struct __node__ * n_ptr = ( struct __node__ *) ipt_sub_offset( ( char *)ptr,sizeof(struct __node__) );
+        struct __node__ *cur_ptr;
 
-	if ( !ptr ) return;
+        int tmp_size = n_ptr->size;
 
-	struct __node__ * n_ptr = ( struct __node__ *) ipt_sub_offset( ( char *)ptr,sizeof(struct __node__) );
-	struct __node__ *cur_ptr;
+        for (   cur_ptr = ( struct __node__ *) ipt_op_drf(&this->sd_ptr->free_list_head);
+                cur_ptr !=  (struct __node__ *)&this->sd_ptr->__null__;
+                cur_ptr = ( struct __node__ *) ipt_op_drf(&cur_ptr->next) )
+        {
 
+                /* Check to skip block */
+                if ( ipt_op_drf(&cur_ptr->next)  != &this->sd_ptr->__null__  &&  cur_ptr  < n_ptr)
+                {
+                        continue;
+                }
 
-	for ( cur_ptr = ( struct __node__ *) ipt_op_drf(&this->sd_ptr->free_list_head);
-         cur_ptr !=  (struct __node__ *)&this->sd_ptr->__null__;
-         cur_ptr = ( struct __node__ *) ipt_op_drf(&cur_ptr->next) )
-   {
+                if ( ipt_op_drf(&cur_ptr->prev) == &this->sd_ptr->__null__ &&  n_ptr <  cur_ptr )
+                {
+                        /*      addr a      <     add b    
+                         *  ---------------- ---------------
+                         * |   (free node)  |                |
+                         * |      next ---> |      next ---> |     
+                         * | <--- prev      | <--- prev      | 
+                         * |                |                |
+                         *  ---------------- ----------------| 
+                         *         ^                 ^
+                         *      (n_ptr)          (cur_ptr)
+                         *                        (head)
+                         */
+                        ipt_op_set(&n_ptr->next,cur_ptr);
+                        ipt_op_set(&n_ptr->prev, &this->sd_ptr->__null__);
+                        ipt_op_set(&cur_ptr->prev,n_ptr);
+                        ipt_op_set(&this->sd_ptr->free_list_head, n_ptr);
 
-		/* Check to skip block */	
-		if ( ipt_op_drf(&cur_ptr->next)  != &this->sd_ptr->__null__  &&  cur_ptr  < n_ptr)
-		{
-			continue;
-		}
+                        /* Attempt to coalesce */
+                        if ( (char *)cur_ptr == ipt_add_offset((char *)n_ptr,n_ptr->size) )
+                        { /* Adjacent and coalesce */
+                                n_ptr->size += cur_ptr->size;
+                                ipt_op_set(&n_ptr->next,ipt_op_drf(&cur_ptr->next));
+                        }
+                        break;
+                }
+                else if ( ipt_op_drf(&cur_ptr->next)  == &this->sd_ptr->__null__ &&  cur_ptr  < n_ptr)
+ {
+                        /*      addr a      <     add b    
+                         *  ---------------- ---------------
+                         * |                |                |
+                         * |      next ---> |      next ---> |     
+                         * | <--- prev      | <--- prev      | 
+                         * |                |                |
+                         *  ---------------- ----------------| 
+                         *         ^                 ^
+                         *      (cur_ptr)         (n_ptr)
+                         *       (tail)
+                         */
+                        ipt_op_set(&n_ptr->prev,cur_ptr);
+                        ipt_op_set(&n_ptr->next, &this->sd_ptr->__null__);
+                        ipt_op_set(&cur_ptr->next, n_ptr);
+                        ipt_op_set(&this->sd_ptr->free_list_tail, n_ptr);
 
-		if ( ipt_op_drf(&cur_ptr->prev) == &this->sd_ptr->__null__ &&  n_ptr <  cur_ptr )
-		{
-			/*      addr a      <     add b    
-			 *  ---------------- ---------------
-			 * |   (free node)  |                |
-			 * |      next ---> |      next ---> |     
-			 * | <--- prev      | <--- prev      | 
-			 * |                |                |
-			 *  ---------------- ----------------| 
-			 *         ^                 ^
-			 *      (n_ptr)          (cur_ptr)
-			 *                        (head)
-			 */
-			ipt_op_set(&n_ptr->next,cur_ptr);
-			ipt_op_set(&n_ptr->prev, &this->sd_ptr->__null__);
-			ipt_op_set(&cur_ptr->prev,n_ptr);
-			ipt_op_set(&this->sd_ptr->free_list_head, n_ptr);
-			break;
-		}	
-		else if ( ipt_op_drf(&cur_ptr->next)  == &this->sd_ptr->__null__ &&  cur_ptr  < n_ptr)
-		{
-			/*      addr a      <     add b    
-			 *  ---------------- ---------------
-			 * |                |                |
-			 * |      next ---> |      next ---> |     
-			 * | <--- prev      | <--- prev      | 
-			 * |                |                |
-			 *  ---------------- ----------------| 
-			 *         ^                 ^
-			 *      (cur_ptr)         (n_ptr)
-			 *       (tail)
-			 */
-			ipt_op_set(&n_ptr->prev,cur_ptr);
-			ipt_op_set(&n_ptr->next, &this->sd_ptr->__null__);
-			ipt_op_set(&cur_ptr->next, n_ptr);
-			ipt_op_set(&this->sd_ptr->free_list_tail, n_ptr);
-			break;
-		}
-		else
-		{
-			/*      addr a      <     addr b     <  addr c    
-			 *  ---------------- ---------------- ----------------
-			 * |                |   (free node)  |                |
-			 * |      next ---> |      next ---> |      next ---> |
-			 * | <--- prev      | <--- prev      | <--- prev      |
-			 * |                |                |                |
-			 *  ---------------- ---------------- ----------------
-			 *                         ^                 ^
-			 *                      (n_ptr)          (cur_ptr)
-			 */
-			ipt_op_set( &((struct __node__ *)ipt_op_drf(&cur_ptr->prev))->next, n_ptr);
-			ipt_op_set(&n_ptr->next,cur_ptr);
-			ipt_op_set(&n_ptr->prev, (void *)ipt_op_drf(&cur_ptr->prev));
-			ipt_op_set(&cur_ptr->prev,n_ptr);
-         break;
-		}
-   }
+                        /* Attempt to coalesce */
+                        if ( ipt_add_offset((char *)cur_ptr,cur_ptr->size)  == (char *)n_ptr  )
+                        { /* Adjacent and coalesce */
+                                cur_ptr->size += n_ptr->size;
+                                ipt_op_set(&cur_ptr->next,ipt_op_drf(&n_ptr->next));
+                        }
+                        break;
+                }
+                else
+                {
+                        /*      addr a      <     addr b     <  addr c    
+                         *  ---------------- ---------------- ----------------
+                         * |                |   (free node)  |                |
+                         * |      next ---> |      next ---> |      next ---> |
+                         * | <--- prev      | <--- prev      | <--- prev      |
+                         * |                |                |                |
+                         *  ---------------- ---------------- ----------------
+                         *                         ^                 ^
+                         *                      (n_ptr)          (cur_ptr)
+                         */
+                        ipt_op_set( &((struct __node__ *)ipt_op_drf(&cur_ptr->prev))->next, n_ptr);
+                        ipt_op_set(&n_ptr->next,cur_ptr);
+                        ipt_op_set(&n_ptr->prev, (void *)ipt_op_drf(&cur_ptr->prev));
+                        ipt_op_set(&cur_ptr->prev,n_ptr);
 
-	/* Handle the empty list scenario */
-	if ( ipt_op_drf(&this->sd_ptr->free_list_head)  == &this->sd_ptr->__null__ )
-	{
-		ipt_op_set(&n_ptr->prev, &this->sd_ptr->__null__);
-		ipt_op_set(&n_ptr->next, &this->sd_ptr->__null__);
-		ipt_op_set(&this->sd_ptr->free_list_head, n_ptr);
-		ipt_op_set(&this->sd_ptr->free_list_tail, n_ptr);
-	}
+                        /* Attempt to coalesce 
+                         * free node is adjacent to it's next node ( i.e current node ).
+                         */
+                        if ( ipt_add_offset((char*)n_ptr,n_ptr->size) == (char*)cur_ptr)
+                        {
+                                n_ptr->size += cur_ptr->size;
+                                ipt_op_set(&n_ptr->next, ipt_op_drf(&cur_ptr->next));
+                                cur_ptr = n_ptr;
+                        }
 
-	this->sd_ptr->num_blocks_allocated--;
+ /* Attempt to coalesce
+                         * free node is adjacent to it's previous node.
+                         */
+                        if ( ipt_add_offset((char*)ipt_op_drf(&n_ptr->prev),((struct __node__ *)ipt_op_drf(&n_ptr->prev))->size)
+                                == (char*)n_ptr)
+                        {
+                                /* Scenario where the the current node and free node have been coalesced already */
+                                if ( cur_ptr == n_ptr )
+                                {
+                                        ((struct __node__*)ipt_op_drf(&n_ptr->prev))->size += n_ptr->size;
+                                        ipt_op_set(&((struct __node__ *)ipt_op_drf(&n_ptr->prev))->next, ipt_op_drf(&n_ptr->next));
+                                        cur_ptr = ((struct __node__ *)ipt_op_drf(&n_ptr->prev));
+                                }
+                                else
+                                {
+                                        /* Scenario where the free node has not been coalesced with the current pointer */
+                                        ((struct __node__*)ipt_op_drf(&n_ptr->prev))->size += n_ptr->size;
+                                        ipt_op_set(&((struct __node__ *)ipt_op_drf(&n_ptr->prev))->next, cur_ptr);
+                                        ipt_op_set(&cur_ptr->prev, ipt_op_drf(&n_ptr->prev) );
+                                }
+                        }
 
-	this->sd_ptr->bytes_allocated -=  n_ptr->size - sizeof(struct __node__);
+                        break;
+                }
+        }
 
-	return;	
+        /* Handle the empty list scenario */
+        if ( ipt_op_drf(&this->sd_ptr->free_list_head)  == &this->sd_ptr->__null__ )
+        {
+                ipt_op_set(&n_ptr->prev, &this->sd_ptr->__null__);
+                ipt_op_set(&n_ptr->next, &this->sd_ptr->__null__);
+                ipt_op_set(&this->sd_ptr->free_list_head, n_ptr);
+                ipt_op_set(&this->sd_ptr->free_list_tail, n_ptr);
+        }
+
+        this->sd_ptr->num_blocks_allocated--;
+
+        this->sd_ptr->bytes_allocated -=  (tmp_size - sizeof(struct __node__));
+
+        sem_post(&this->sd_ptr->sem);
+
+        return;
 }
 static int
 register_object(private_allocator_t *this, const char *name, void *ptr)
 {
-	struct __node__  *n_ptr = (struct __node__ * ) this->public.malloc(&this->public,sizeof(struct reg_obj));
+ 	struct __node__  *n_ptr;
+        char *name_ptr;
 
-	char *name_ptr = (char * ) this->public.malloc(&this->public,strlen(name) + 1);
+        /* validate inputs and make sure not already registered */
+        if ( !name || !ptr || this->public.find_registered_object((ipt_allocator_t*)this,name) )
+        {
+                return 1;
+        }
 
-	strcpy(name_ptr,name);
+        /* check allocations */
+        if ( (n_ptr = (struct __node__ * ) this->public.malloc(&this->public,sizeof(struct reg_obj)) ) == NULL  ||
+             (name_ptr = (char * ) this->public.malloc(&this->public,strlen(name) + 1) ) == NULL )
+        {
+                return 1;
+        }
 
-	ipt_op_set(&n_ptr->prev, ipt_op_drf(&this->sd_ptr->ro_list_tail));
-	ipt_op_set(&n_ptr->next,&this->sd_ptr->__null__);
+        strcpy(name_ptr,name);
 
-	ipt_op_set(&(( struct reg_obj *)n_ptr)->item, ptr);
-	ipt_op_set(&(( struct reg_obj *)n_ptr)->name, (void *)name_ptr);
+        /* Update the data */
+        ipt_op_set(&(( struct reg_obj *)n_ptr)->item, ptr);
+        ipt_op_set(&(( struct reg_obj *)n_ptr)->name, (void *)name_ptr);
 
-	if ( ipt_op_drf(&this->sd_ptr->ro_list_tail) != &this->sd_ptr->__null__)
-	{
-		ipt_op_set( &((struct __node__ *)ipt_op_drf(&this->sd_ptr->ro_list_tail))->next,n_ptr);
-	}
+        /* From here on in, update the linkage */
 
-	if ( ipt_op_drf(&this->sd_ptr->ro_list_head) == &this->sd_ptr->__null__)
-	{
-		ipt_op_set(&this->sd_ptr->ro_list_head,n_ptr);
-	}
+        /* set the head */
+        if ( ipt_op_drf(&this->sd_ptr->ro_list_head) == &this->sd_ptr->__null__ )
+        {
+                ipt_op_set(&this->sd_ptr->ro_list_head,n_ptr);
+        }
 
-	ipt_op_set(&this->sd_ptr->ro_list_tail,n_ptr);
+        /* add to the tail of the list*/
+        ipt_op_set(&n_ptr->prev, ipt_op_drf(&this->sd_ptr->ro_list_tail));
+        ipt_op_set(&n_ptr->next,&this->sd_ptr->__null__);
+
+        if ( ipt_op_drf(&this->sd_ptr->ro_list_tail) != &this->sd_ptr->__null__)
+        {
+                ipt_op_set( &((struct __node__ *)ipt_op_drf(&this->sd_ptr->ro_list_tail))->next,n_ptr);
+        }
+
+        ipt_op_set(&this->sd_ptr->ro_list_tail,n_ptr);
 
 	return 0;
-	
 }
-
-static void * 
+static void *
 deregister_object(private_allocator_t *this, const char *name)
 {
-	struct __node__ *cur_ptr;
-	void * item;
+        struct __node__ *cur_ptr;
+        void * item;
 
         for (   cur_ptr = ( struct __node__ *) ipt_op_drf(&this->sd_ptr->ro_list_head);
                 cur_ptr !=  (struct __node__ *) &this->sd_ptr->__null__;
                 cur_ptr = ( struct __node__ *) ipt_op_drf(&cur_ptr->next) )
         {
-		struct reg_obj *r_ptr = (struct reg_obj *)cur_ptr;
-		if ( !strcmp(name, (char *) ipt_op_drf( &((struct reg_obj *)cur_ptr)->name) ) )
-		{
-			printf("found it \n");
-			break;
-		}
+                struct reg_obj *r_ptr = (struct reg_obj *)cur_ptr;
+                if ( !strcmp(name, (char *) ipt_op_drf( &((struct reg_obj *)cur_ptr)->name) ) )
+                {
+                        break;
+                }
         }
 
-	if ( cur_ptr == (struct __node__ *)&this->sd_ptr->__null__ )
-	{
-		return NULL;
-	}
+        if ( cur_ptr == (struct __node__ *)&this->sd_ptr->__null__ )
+        {
+                return NULL;
+        }
 
-	/* Update the linkage */
-	if ( ipt_op_drf(&cur_ptr->prev) != &this->sd_ptr->__null__) 
-	{
-		ipt_op_set( &((struct __node__ *)ipt_op_drf(&cur_ptr->prev))->next, ipt_op_drf(&cur_ptr->next) );
-	} 
-	if ( ipt_op_drf(&cur_ptr->next) != &this->sd_ptr->__null__) 
-	{
-		ipt_op_set( &((struct __node__ *)ipt_op_drf(&cur_ptr->next))->prev, ipt_op_drf(&cur_ptr->prev));
-	}
- 
-	/* free the name */ 
-	private_free(this, ipt_op_drf( ipt_op_drf( &((struct reg_obj *)cur_ptr)->name )) );
+        /* Update the linkage */
+        if ( ipt_op_drf(&cur_ptr->prev) != &this->sd_ptr->__null__)
+        {
+                ipt_op_set( &((struct __node__ *)ipt_op_drf(&cur_ptr->prev))->next, ipt_op_drf(&cur_ptr->next) );
+        }
+        if ( ipt_op_drf(&cur_ptr->next) != &this->sd_ptr->__null__)
+        {
+                ipt_op_set( &((struct __node__ *)ipt_op_drf(&cur_ptr->next))->prev, ipt_op_drf(&cur_ptr->prev));
+        }
+        if ( ipt_op_drf(&cur_ptr->prev) == &this->sd_ptr->__null__ && ipt_op_drf(&cur_ptr->next) == &this->sd_ptr->__null__)
+        { /* only a single element. Set the head and tail to null. */
+                ipt_op_set(&this->sd_ptr->ro_list_head,&this->sd_ptr->__null__);
+                ipt_op_set(&this->sd_ptr->ro_list_tail,&this->sd_ptr->__null__);
+        }
 
-	/* return the item. this is not free'd because the caller allocated it */
-	return ipt_op_drf( &((struct reg_obj *)cur_ptr)->item );
+
+        /* free the name */
+        private_free(this,  (void *)ipt_op_drf( &((struct reg_obj *)cur_ptr)->name ) );
+
+        /* free the registration object */
+        private_free(this, (void *)cur_ptr );
+
+        /* return the item. this is not free'd because the caller allocated it */
+        return ipt_op_drf( &((struct reg_obj *)cur_ptr)->item );
 }
+
 static void * 
 find_registered_object(private_allocator_t *this, const char *name)
 {
@@ -425,7 +498,27 @@ find_registered_object(private_allocator_t *this, const char *name)
 
 	return NULL;
 }
+static size_t free_blocks(private_allocator_t *this)
+{
+        size_t count = 0;
+        struct __node__ *cur_ptr;
 
+        for (   cur_ptr = ( struct __node__ *) ipt_op_drf(&this->sd_ptr->free_list_head);
+                cur_ptr != (struct __node__ *) &this->sd_ptr->__null__;
+                cur_ptr = ( struct __node__ *) ipt_op_drf(&cur_ptr->next) )
+        {
+                count++;
+        }
+        return count;
+}
+
+static size_t
+bytes_remaining(private_allocator_t *this)
+{
+   return this->sd_ptr->size - 
+	  this->sd_ptr->bytes_allocated - 
+          sizeof( struct __node__) * this->sd_ptr->num_blocks_allocated;
+}
 static void
 dump_stats(private_allocator_t *this)
 {
@@ -525,6 +618,8 @@ void *base_address;
  	this->public.get_shared_ptr = (void * (*)(ipt_allocator_t*) ) get_shared_ptr;
  	this->public.blocks_allocated = (size_t (*)(ipt_allocator_t *) ) blocks_allocated;
         this->public.bytes_allocated = (size_t (*)(ipt_allocator_t *) ) bytes_allocated;
+        this->public.free_blocks = (size_t (*)(ipt_allocator_t *) ) free_blocks;
+        this->public.bytes_remaining = (size_t (*)(ipt_allocator_t *) ) bytes_remaining;
 
 
         /* Start the free list after the shared_data structure */
@@ -585,6 +680,8 @@ int shmid;
  	this->public.get_shared_ptr = (void * (*)(ipt_allocator_t*) ) get_shared_ptr;
  	this->public.blocks_allocated = (size_t (*)(ipt_allocator_t *) ) blocks_allocated;
         this->public.bytes_allocated = (size_t (*)(ipt_allocator_t *) ) bytes_allocated;
+        this->public.free_blocks = (size_t (*)(ipt_allocator_t *) ) free_blocks;
+        this->public.bytes_remaining = (size_t (*)(ipt_allocator_t *) ) bytes_remaining;
      
 	return (ipt_allocator_t *) this;
 }

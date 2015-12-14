@@ -128,6 +128,27 @@ struct ipt_allocator_t
 	 */
 	size_t (*bytes_allocated)(ipt_allocator_t *this);
 
+	/**
+	 * Return the bytes remaining in the allocator. 
+	 *
+	 * @param[in] this The allocator's this pointer.
+	 *
+	 * @retval size_t  The total number of bytes remaining.
+	 */
+	size_t (*bytes_remaining)(ipt_allocator_t *this);
+
+	/**
+         * Return the number of free blocks. 
+         *
+         * @param[in] this The allocator's this pointer.
+         *
+         * @retval size_t  The total number of free blocks.
+         *
+         * Blocks are allocated at the end of a free block. 
+         */
+        size_t (*free_blocks)(ipt_allocator_t *this);
+
+
         /**
          * Access the contiguous memory block.
          *

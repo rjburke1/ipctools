@@ -6,9 +6,12 @@
 #include <assert.h>
 
 #define SEGMENT_SIZE 1024
-
+#define BLOCK_SIZE 1024
+/*
+ * Allocate once and free
+ */
 int test_1(ipt_allocator_t *alloc_ptr)
-{/* allocate once and free */
+{
 void *ptr;
 
    void * ptr_1 = alloc_ptr->malloc( alloc_ptr,  100);
@@ -19,23 +22,25 @@ void *ptr;
 
    assert ( alloc_ptr->blocks_allocated(alloc_ptr) == 0  &&
 	    alloc_ptr->bytes_allocated(alloc_ptr) == 0 );
-
 }
+/*
+ * Test overallocation.
+ */
 int test_2(ipt_allocator_t *alloc_ptr)
-{ /* attempt to over allocate */
-
+{
       /* should not be able to allocate sement */
-      void * ptr = alloc_ptr->malloc( alloc_ptr, 2 * SEGMENT_SIZE);
+      void * ptr = alloc_ptr->malloc( alloc_ptr, 2 * BLOCK_SIZE);
 
       assert( ptr == NULL );
 }
-
+/* 
+ * Make sure our free/malloc is working. If there is a leak this will fail. 
+ */
 int test_3(ipt_allocator_t *alloc_ptr)
-{
+{ 
 
-   /* Make sure our free/malloc is working. If there is a leak this will fail. */
    int i;
-   for( i=0; i<  SEGMENT_SIZE / 512 * 10000; i++)
+   for( i=0; i<  BLOCK_SIZE / 512 * 10000; i++)
    {
       void *ptr = alloc_ptr->malloc( alloc_ptr, 512);
 
@@ -46,16 +51,14 @@ int test_3(ipt_allocator_t *alloc_ptr)
 
    assert ( alloc_ptr->blocks_allocated(alloc_ptr) == 0  &&
 	    alloc_ptr->bytes_allocated(alloc_ptr) == 0 );
-
 }
-
-void test_4(ipt_allocator_t *alloc_ptr)
-{  
 /*
  * Make sure the stats calculations are correct.
  * The allocations are byte aligned. This means nearest 4 bytes on 32 bit, and 8 bytes on 64 bit.
  * The ptrdiff_t structure is used to determine the alignement in a platform independent way.
  */
+void test_4(ipt_allocator_t *alloc_ptr)
+{  
 struct dmy_data { void *ptr; size_t size; };
 struct dmy_data arr[5] = { {NULL,11}, {NULL,17}, {NULL,2}, {NULL,6}, {NULL,341} };
 int in_size = 100;
@@ -93,9 +96,11 @@ int i = 0;
 	         alloc_ptr->bytes_allocated(alloc_ptr) ==  0);
 
 }
+/* 
+ * Make sure the order of allocation and freeing does not matter 
+ */
 void test_5(ipt_allocator_t *alloc_ptr)
 {
-        /* Make sure the order of allocation and freeing does not matter */
 	void * ptr_1 = alloc_ptr->malloc(alloc_ptr, 100);
 	void * ptr_2 = alloc_ptr->malloc(alloc_ptr, 100);
 	void * ptr_3 = alloc_ptr->malloc(alloc_ptr, 100);
@@ -163,11 +168,11 @@ void test_5(ipt_allocator_t *alloc_ptr)
 		 alloc_ptr->bytes_allocated(alloc_ptr) == 0 );
 }
 
+/*
+ * Test that register works. 
+ */
 void test_6(ipt_allocator_t *alloc_ptr)
 {
-   /*
-    * Test that register works. 
-    */
    struct my_data { int a;int b; };
 
    struct my_data * ptr = alloc_ptr->malloc(alloc_ptr, sizeof(struct my_data));
@@ -196,11 +201,11 @@ void test_6(ipt_allocator_t *alloc_ptr)
 	    alloc_ptr->bytes_allocated(alloc_ptr) == 0 );
    
 }
+/*
+ * Test that register/deregister works.
+ */
 void test_7(ipt_allocator_t *alloc_ptr)
 {
-   /*
-    * Test that register/deregister works.
-    */
    struct my_data { int a;int b; };
 
    struct my_data * ptr = alloc_ptr->malloc(alloc_ptr, sizeof(struct my_data));
@@ -223,12 +228,13 @@ void test_7(ipt_allocator_t *alloc_ptr)
 	    alloc_ptr->bytes_allocated(alloc_ptr) == 0 );
 
 }
+/*
+ * Verify copying the entire memory block maintains all the relationships.
+ * This is the ultimate torture test that validates the offset logic (i.e offset_ptr works).
+ */
 void test_8(ipt_allocator_t *alloc_ptr)
-{ /* verify memmove works */
+{
    struct my_data *ptr_a, *ptr_n;
-   /*
-    * Test relative pointers are working by moving memory segment. 
-    */
    struct my_data { int a;int b; };
 
    ptr_a = alloc_ptr->malloc(alloc_ptr, sizeof(struct my_data));
@@ -236,16 +242,11 @@ void test_8(ipt_allocator_t *alloc_ptr)
    assert(ptr_a);
 
    ptr_a->a = 1; ptr_a->b = 2;
-   
-   printf("register object test_8\n"); 
-   /* register object in shared memory segment and make sure it is there. */
-   alloc_ptr->register_object(alloc_ptr,"My Object", ptr_a);
 
-   alloc_ptr->dump_stats(alloc_ptr);
+   alloc_ptr->register_object(alloc_ptr,"My Object", ptr_a);
 
    ptr_a = (struct my_data *)  alloc_ptr->find_registered_object(alloc_ptr,"My Object");
 
-   
    assert (ptr_a);  
 
    assert ( ptr_a->a == 1 && ptr_a->b == 2 );
@@ -260,20 +261,17 @@ void test_8(ipt_allocator_t *alloc_ptr)
 
    ipt_allocator_t *nalloc_ptr =  (ipt_allocator_t *) ipt_allocator_malloc_attach((void*)dst_ptr);
 
-    alloc_ptr->dump_stats(alloc_ptr);
-    nalloc_ptr->dump_stats(nalloc_ptr);
-
-//   ptr_n = (struct my_data *) nalloc_ptr->find_registered_object(nalloc_ptr,"My Object");
+   ptr_n = (struct my_data *) nalloc_ptr->find_registered_object(nalloc_ptr,"My Object");
 
    assert(ptr_n);
 
- //  assert ( ptr_n->a == 1 && ptr_n->b == 2 );
+   assert ( ptr_n->a == 1 && ptr_n->b == 2 );
 
    assert ( nalloc_ptr->bytes_allocated(nalloc_ptr) == alloc_ptr->bytes_allocated(alloc_ptr) &&
             nalloc_ptr->blocks_allocated(nalloc_ptr) == alloc_ptr->blocks_allocated(alloc_ptr) ); 
 
-  // assert ( (ptr_a = alloc_ptr->deregister_object(alloc_ptr,"My Object")) != NULL &&
-   //         (ptr_n = nalloc_ptr->deregister_object(nalloc_ptr,"My Object")) != NULL );
+   assert ( (ptr_a = alloc_ptr->deregister_object(alloc_ptr,"My Object")) != NULL &&
+            (ptr_n = nalloc_ptr->deregister_object(nalloc_ptr,"My Object")) != NULL );
 
    alloc_ptr->free(alloc_ptr,ptr_a);
 
@@ -284,6 +282,60 @@ void test_8(ipt_allocator_t *alloc_ptr)
    assert ( nalloc_ptr->blocks_allocated(nalloc_ptr) == 0 && alloc_ptr->blocks_allocated(alloc_ptr)  == 0); 
    
 }
+/*
+ * Test fragementation occurs and, when returned the memory blocks are coalesced
+ */
+void test_9(ipt_allocator_t *alloc_ptr)
+{
+int i;
+struct dmy_data { void *ptr; size_t size; };
+struct dmy_data arr[5] = { {NULL,11}, {NULL,17}, {NULL,2}, {NULL,6}, {NULL,341} };
+
+	/* No allocation yet, so we have a single block of size 1024 */
+	assert( alloc_ptr->free_blocks(alloc_ptr) == 1  &&
+                alloc_ptr->bytes_remaining(alloc_ptr) == BLOCK_SIZE);
+
+	for ( i = 0; i < 5; i ++ )
+        {
+           assert( (arr[i].ptr = alloc_ptr->malloc(alloc_ptr,arr[i].size)) );
+        }
+
+        assert ( alloc_ptr->blocks_allocated(alloc_ptr) == 5 );
+
+        for ( i = 0; i < 5; i ++ )
+        {
+           alloc_ptr->free(alloc_ptr,arr[i].ptr);
+        }
+
+        /* Returned all free blocks, so should end up with a single block = 1024 */
+	assert( alloc_ptr->free_blocks(alloc_ptr) == 1 );
+
+	/* 
+         * The allocation algorithm pulls a block from the end of the first available block.
+         * When it frees a block, it tries to coalesce continguous blocks
+         */ 	
+
+	/* Allocate five more blocks */
+	for ( i = 0; i < 5; i++ )
+        {
+           assert( (arr[i].ptr = alloc_ptr->malloc(alloc_ptr,arr[i].size)) );
+        }
+
+	/* Should have a single free block */
+	assert( alloc_ptr->free_blocks(alloc_ptr) == 1);
+
+	/* Return first non-contigous */
+        alloc_ptr->free(alloc_ptr,arr[0].ptr);
+	assert( alloc_ptr->free_blocks(alloc_ptr) == 2);
+        alloc_ptr->free(alloc_ptr,arr[2].ptr);
+	assert( alloc_ptr->free_blocks(alloc_ptr) == 3);
+        alloc_ptr->free(alloc_ptr,arr[4].ptr);
+	assert( alloc_ptr->free_blocks(alloc_ptr) == 3);
+        alloc_ptr->free(alloc_ptr,arr[1].ptr);
+	assert( alloc_ptr->free_blocks(alloc_ptr) == 2);
+        alloc_ptr->free(alloc_ptr,arr[3].ptr);
+	assert( alloc_ptr->free_blocks(alloc_ptr) == 1);
+}
 
 int main( int argc, char *argv[])
 {
@@ -291,7 +343,7 @@ int main( int argc, char *argv[])
 
 	ipt_allocator_t *alloc_ptr;
 
-	alloc_ptr = ipt_allocator_malloc_create(1024);
+	alloc_ptr = ipt_allocator_malloc_create(BLOCK_SIZE);
 
    	if ( alloc_ptr == NULL )
    	{
@@ -307,8 +359,9 @@ int main( int argc, char *argv[])
 	test_6(alloc_ptr);
 	test_7(alloc_ptr);
 
-	//TODO: test for moving memory and validating offsets
-	//test_8(alloc_ptr);
+	test_8(alloc_ptr);
+
+	test_9(alloc_ptr);
 
  	printf(" %s completed successfully\n", argv[0]);
 
