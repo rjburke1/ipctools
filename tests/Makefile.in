@@ -80,7 +80,8 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = reactor_timer$(EXEEXT) shared_queue$(EXEEXT) \
 	shared_in_list$(EXEEXT) reactor_notify$(EXEEXT) \
-	offset_ptr$(EXEEXT) reactor_signal$(EXEEXT) allocator$(EXEEXT) \
+	offset_ptr$(EXEEXT) reactor_signal$(EXEEXT) \
+	allocator_shm$(EXEEXT) allocator_malloc$(EXEEXT) \
 	logger$(EXEEXT) reactor$(EXEEXT)
 subdir = tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
@@ -98,14 +99,18 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_allocator_OBJECTS = allocator.$(OBJEXT)
-allocator_OBJECTS = $(am_allocator_OBJECTS)
-allocator_LDADD = $(LDADD)
-allocator_DEPENDENCIES =
+am_allocator_malloc_OBJECTS = allocator_malloc.$(OBJEXT)
+allocator_malloc_OBJECTS = $(am_allocator_malloc_OBJECTS)
+allocator_malloc_LDADD = $(LDADD)
+allocator_malloc_DEPENDENCIES =
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am_allocator_shm_OBJECTS = allocator_shm.$(OBJEXT)
+allocator_shm_OBJECTS = $(am_allocator_shm_OBJECTS)
+allocator_shm_LDADD = $(LDADD)
+allocator_shm_DEPENDENCIES =
 am_logger_OBJECTS = logger.$(OBJEXT)
 logger_OBJECTS = $(am_logger_OBJECTS)
 logger_LDADD = $(LDADD)
@@ -172,12 +177,13 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(allocator_SOURCES) $(logger_SOURCES) $(offset_ptr_SOURCES) \
-	$(reactor_SOURCES) $(reactor_notify_SOURCES) \
-	$(reactor_signal_SOURCES) $(reactor_timer_SOURCES) \
-	$(shared_in_list_SOURCES) $(shared_queue_SOURCES)
-DIST_SOURCES = $(allocator_SOURCES) $(logger_SOURCES) \
-	$(offset_ptr_SOURCES) $(reactor_SOURCES) \
+SOURCES = $(allocator_malloc_SOURCES) $(allocator_shm_SOURCES) \
+	$(logger_SOURCES) $(offset_ptr_SOURCES) $(reactor_SOURCES) \
+	$(reactor_notify_SOURCES) $(reactor_signal_SOURCES) \
+	$(reactor_timer_SOURCES) $(shared_in_list_SOURCES) \
+	$(shared_queue_SOURCES)
+DIST_SOURCES = $(allocator_malloc_SOURCES) $(allocator_shm_SOURCES) \
+	$(logger_SOURCES) $(offset_ptr_SOURCES) $(reactor_SOURCES) \
 	$(reactor_notify_SOURCES) $(reactor_signal_SOURCES) \
 	$(reactor_timer_SOURCES) $(shared_in_list_SOURCES) \
 	$(shared_queue_SOURCES)
@@ -331,7 +337,8 @@ reactor_notify_SOURCES = reactor_notify.c
 shared_queue_SOURCES = shared_queue.c
 shared_in_list_SOURCES = shared_in_list.c
 offset_ptr_SOURCES = offset_ptr.c
-allocator_SOURCES = allocator.c
+allocator_shm_SOURCES = allocator_shm.c
+allocator_malloc_SOURCES = allocator_malloc.c
 logger_SOURCES = logger.c
 all: all-am
 
@@ -417,9 +424,13 @@ clean-binPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
-allocator$(EXEEXT): $(allocator_OBJECTS) $(allocator_DEPENDENCIES) $(EXTRA_allocator_DEPENDENCIES) 
-	@rm -f allocator$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(allocator_OBJECTS) $(allocator_LDADD) $(LIBS)
+allocator_malloc$(EXEEXT): $(allocator_malloc_OBJECTS) $(allocator_malloc_DEPENDENCIES) $(EXTRA_allocator_malloc_DEPENDENCIES) 
+	@rm -f allocator_malloc$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(allocator_malloc_OBJECTS) $(allocator_malloc_LDADD) $(LIBS)
+
+allocator_shm$(EXEEXT): $(allocator_shm_OBJECTS) $(allocator_shm_DEPENDENCIES) $(EXTRA_allocator_shm_DEPENDENCIES) 
+	@rm -f allocator_shm$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(allocator_shm_OBJECTS) $(allocator_shm_LDADD) $(LIBS)
 
 logger$(EXEEXT): $(logger_OBJECTS) $(logger_DEPENDENCIES) $(EXTRA_logger_DEPENDENCIES) 
 	@rm -f logger$(EXEEXT)
@@ -459,7 +470,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/allocator.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/allocator_malloc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/allocator_shm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logger.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/offset_ptr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reactor.Po@am__quote@

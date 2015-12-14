@@ -1,7 +1,7 @@
 LDADD = -lipctools -lrt 
 AM_LDFLAGS = -L$(top_builddir)/src -pthread
 AM_CFLAGS = -I$(top_srcdir)/src
-bin_PROGRAMS = reactor_timer shared_queue shared_in_list reactor_notify offset_ptr reactor_signal allocator logger reactor
+bin_PROGRAMS = reactor_timer shared_queue shared_in_list reactor_notify offset_ptr reactor_signal allocator_shm allocator_malloc logger reactor
 reactor_SOURCES = reactor.c
 reactor_timer_SOURCES = reactor_timer.c
 reactor_signal_SOURCES = reactor_signal.c
@@ -9,5 +9,6 @@ reactor_notify_SOURCES = reactor_notify.c
 shared_queue_SOURCES = shared_queue.c
 shared_in_list_SOURCES = shared_in_list.c
 offset_ptr_SOURCES = offset_ptr.c
-allocator_SOURCES = allocator.c
+allocator_shm_SOURCES = allocator_shm.c
+allocator_malloc_SOURCES = allocator_malloc.c
 logger_SOURCES = logger.c
