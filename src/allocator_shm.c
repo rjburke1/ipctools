@@ -530,7 +530,6 @@ find_registered_object(private_allocator_t *this, const char *name)
                 cur_ptr !=  (struct __node__ *) &this->sd_ptr->__null__;
                 cur_ptr = ( struct __node__ *) ipt_op_drf(&cur_ptr->next) )
         {
-		struct reg_obj *r_ptr = (struct reg_obj *)cur_ptr;
 		if ( !strcmp(name, (char *) ipt_op_drf( &((struct reg_obj *)cur_ptr)->name) ) )
 		{
 			sem_post(&this->sd_ptr->sem);

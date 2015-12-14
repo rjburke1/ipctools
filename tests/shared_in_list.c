@@ -30,10 +30,11 @@ int main (int argc, char *argv[])
 	/* Create the shared list */	
 	ipt_shared_in_list_t *sl_ptr = ipt_shared_in_list_create("My Shared Intrusive List", alloc_ptr);
 
+        alloc_ptr->dump_stats(alloc_ptr);
 
 	if ( sl_ptr == NULL )
 	{
-		printf("Failed to creat the shared instrusive list\n");
+		printf("Failed to create the shared instrusive list\n");
 		return -1;
 	}
 
@@ -80,29 +81,6 @@ int main (int argc, char *argv[])
 	      printf("Failed to access the shared_ptr\n");
 	      return -1;
         }
-
-	memmove(dst_ptr,sd_ptr, alloc_ptr->get_size(alloc_ptr) );
-
-        alloc_ptr =  ipt_allocator_malloc_attach(dst_ptr);
-
-	/* Check to see if the object has been registed with the allocator */
-	if ( ( ptr = alloc_ptr->find_registered_object(alloc_ptr,"My Shared Intrusive List")) == NULL )
-	{
-		printf("Failed to find the registed shared list in the allocator\n");
-		return -1;
-	}
-
-	/* attached to memory */	
-	sl_ptr = ipt_shared_in_list_attach("My Shared Intrusive List", alloc_ptr);
-
-
-	m_ptr = (struct my_struct *) sl_ptr->head(sl_ptr);
-
-	if ( m_ptr->a != 1  || strcmp(m_ptr->name,"My Test Object") )
-	{
-		printf("memmove test failed. Relative pointers must not be working\n");
-		return -1;
-	}	
 
         printf(" %s completed successfully\n", argv[0]);
 
