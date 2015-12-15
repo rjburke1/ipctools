@@ -37,7 +37,7 @@ int get_handle(ipt_event_handler_t *this)
 	return this->_h;
 }
 
-test_handler_init(struct test_handler *this)
+void test_handler_init(struct test_handler *this)
 {
 	this->eh.handle_input = (int (*)(ipt_event_handler_t *, ipt_handle_t h)) handle_input;
 	this->eh.handle_close = (int (*)(ipt_event_handler_t *, ipt_event_handler_mask_t mask)) handle_close;
@@ -45,7 +45,7 @@ test_handler_init(struct test_handler *this)
 	this->eh.set_handle   = (ipt_handle_t (*)(ipt_event_handler_t *, ipt_handle_t h)) set_handle;
 }
 
-test_1(ipt_reactor_t *reactor, int pfd[2], ipt_event_handler_t *eh)
+int test_1(ipt_reactor_t *reactor, int pfd[2], ipt_event_handler_t *eh)
 {
 
 	int status;
@@ -84,7 +84,7 @@ test_1(ipt_reactor_t *reactor, int pfd[2], ipt_event_handler_t *eh)
 }
 
 /* Make sure the reactor returns 0 when timeout fires and no event handlers are dispatched */
-test_2(ipt_reactor_t *reactor, int pfd[2], ipt_event_handler_t *eh)
+int test_2(ipt_reactor_t *reactor, int pfd[2], ipt_event_handler_t *eh)
 {
 
 	int status;

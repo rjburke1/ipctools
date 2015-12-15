@@ -264,10 +264,8 @@ void test_8(ipt_allocator_t *alloc_ptr)
    nalloc_ptr->dump_stats(nalloc_ptr);
 
    ptr_n = (struct my_data *) nalloc_ptr->find_registered_object(nalloc_ptr,"My Object");
- return 0;
-   assert(ptr_n);
 
-	return 0;
+   assert(ptr_n);
 
    assert ( ptr_n->a == 1 && ptr_n->b == 2 );
 

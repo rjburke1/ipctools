@@ -75,7 +75,8 @@ count(private_shared_in_list_t *this)
 {
 	return this->sd_ptr->count;
 }
-static private_remove(private_shared_in_list_t *this, ipt_shared_in_list_node_t *n_ptr)
+static void 
+private_remove(private_shared_in_list_t *this, ipt_shared_in_list_node_t *n_ptr)
 {
 
 	sem_wait(&this->sd_ptr->sem);

@@ -19,7 +19,7 @@ int handle_timeout(ipt_event_handler_t *this, const ipt_time_value_t *tv, const 
 	return 0;
 }
 
-test_handler_init(struct test_handler *this)
+void test_handler_init(struct test_handler *this)
 {
 	this->eh.handle_timeout = (int (*)(ipt_event_handler_t *, const ipt_time_value_t *tv, const void *act)) handle_timeout;
 }

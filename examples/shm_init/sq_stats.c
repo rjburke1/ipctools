@@ -10,7 +10,7 @@
 
 char *name = NULL;
 
-help(void)
+void help(void)
 {
         fprintf(stderr,"usage : sq_state -n [name]\n");
         fprintf(stderr,"name    : Name of the shared queue registered with the allocator.\n");

@@ -10,7 +10,7 @@
 
 char *name;
 
-help(void)
+void help(void)
 {
         fprintf(stderr,"usage : vew_logs -n [name]\n");
         fprintf(stderr,"name    : Name of the logger registered with the allocator.\n");

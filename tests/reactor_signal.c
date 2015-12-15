@@ -55,7 +55,7 @@ ipt_handle_t get_handle(ipt_event_handler_t *this)
 	return -1;
 }
 
-test_handler_init(struct test_handler *this)
+void test_handler_init(struct test_handler *this)
 {
 	this->eh.handle_signal  = (int (*)(ipt_event_handler_t *, int )) handle_signal;
 	this->eh.handle_close   = (int (*)(ipt_event_handler_t *, ipt_event_handler_mask_t mask)) handle_close;

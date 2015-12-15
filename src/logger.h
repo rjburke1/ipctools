@@ -292,7 +292,7 @@ void ipt_logger_for_each(ipt_logger_t *this, void (*func)(const ipt_logger_messa
   *
   * @param[in] msg The msg to be dumped
   */
-void dump_log_message(ipt_logger_message_t *msg);
+void ipt_logger_dump_message(ipt_logger_message_t *msg);
 
 /**
   * Convenience function.

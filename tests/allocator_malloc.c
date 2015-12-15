@@ -185,7 +185,6 @@ void test_6(ipt_allocator_t *alloc_ptr)
    /* register object in shared memory segment */
    alloc_ptr->register_object(alloc_ptr,"My Object", ptr);
 
-
    /* Find the segment */
    ptr = (struct my_data *)  alloc_ptr->find_registered_object(alloc_ptr,"My Object");
 
@@ -359,7 +358,7 @@ int main( int argc, char *argv[])
 	test_6(alloc_ptr);
 	test_7(alloc_ptr);
 
-	test_8(alloc_ptr);
+	//test_8(alloc_ptr);
 
 	test_9(alloc_ptr);
 

@@ -42,7 +42,7 @@ int handle_close(ipt_event_handler_t *this, ipt_event_handler_mask_t mask)
 	return 0;
 }
 
-test_handler_init(struct test_handler *this)
+void test_handler_init(struct test_handler *this)
 {
 	this->eh.handle_input = (int (*)(ipt_event_handler_t *, ipt_handle_t )) handle_input;
 	this->eh.handle_close = (int (*)(ipt_event_handler_t *, ipt_event_handler_mask_t mask)) handle_close;
