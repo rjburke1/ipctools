@@ -253,6 +253,7 @@ set_expire_interval(private_process_monitor_t *this, const char *process_name, u
 static ipt_handle_t
 handle_timeout(ipt_event_handler_t *this, const ipt_time_value_t *tv, const void *act)
 {
+	printf("handle_timeout\n");fflush(stdout);
 
 	char *process_name = (char *) act;
 

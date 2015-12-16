@@ -30,8 +30,6 @@ int main (int argc, char *argv[])
 	/* Create the shared list */	
 	ipt_shared_in_list_t *sl_ptr = ipt_shared_in_list_create("My Shared Intrusive List", alloc_ptr);
 
-        alloc_ptr->dump_stats(alloc_ptr);
-
 	if ( sl_ptr == NULL )
 	{
 		printf("Failed to create the shared instrusive list\n");
