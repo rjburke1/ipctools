@@ -9,7 +9,7 @@
 
 ipt_reactor_t *reactor;
 
-#define NUMBER_OF_NOTIFICATIONS (1000000)
+#define NUMBER_OF_NOTIFICATIONS (1)
 static int exit_flag = 0;
 static int count = 0;
 
@@ -36,7 +36,7 @@ int handle_input(ipt_event_handler_t *this, ipt_event_handler_mask_t mask)
 	return 0;
 }
 
-int handle_close(ipt_event_handler_t *this, ipt_event_handler_mask_t mask)
+int handle_close(ipt_event_handler_t *this, ipt_handle_t h, ipt_event_handler_mask_t mask)
 {
 	exit_flag = 1;
 	return 0;
@@ -45,7 +45,7 @@ int handle_close(ipt_event_handler_t *this, ipt_event_handler_mask_t mask)
 void test_handler_init(struct test_handler *this)
 {
 	this->eh.handle_input = (int (*)(ipt_event_handler_t *, ipt_handle_t )) handle_input;
-	this->eh.handle_close = (int (*)(ipt_event_handler_t *, ipt_event_handler_mask_t mask)) handle_close;
+	this->eh.handle_close = (int (*)(ipt_event_handler_t *, ipt_handle_t, ipt_event_handler_mask_t mask)) handle_close;
 }
 
 int main(int argc , char *argv[])

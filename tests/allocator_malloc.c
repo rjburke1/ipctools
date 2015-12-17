@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <malloc.h>
 
 #define SEGMENT_SIZE 1024
 #define BLOCK_SIZE 1024

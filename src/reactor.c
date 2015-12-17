@@ -213,7 +213,7 @@ notify_handle_input(notify_handler_t *this, ipt_handle_t h)
 
 	if ( msg.eh_ptr->handle_input(msg.eh_ptr, h) < 0 )
 	{
-		msg.eh_ptr->handle_close(msg.eh_ptr, EVENT_HANDLER_READ_MASK);
+		msg.eh_ptr->handle_close(msg.eh_ptr, ((ipt_event_handler_t *)this)->get_handle(msg.eh_ptr),EVENT_HANDLER_READ_MASK);
 	}
 
 	return 0;
@@ -320,9 +320,8 @@ dispatch_timers(private_reactor_t *this, struct timespec current_time)
 			if ( this->tms[i].eh_ptr->handle_timeout(this->tms[i].eh_ptr, &tmp, this->tms[i].act) < 0 )
 			{
 				if ( this->tms[i].eh_ptr->handle_close )
-					this->tms[i].eh_ptr->handle_close(this->ehs[i].eh_ptr, EVENT_HANDLER_TIMER_MASK);
-
-				memset(&this->tms[i],0, sizeof(timer_node_t));;
+					this->tms[i].eh_ptr->handle_close(this->tms[i].eh_ptr, this->tms[i].eh_ptr->get_handle(this->tms[i].eh_ptr), EVENT_HANDLER_TIMER_MASK);
+				memset(&this->tms[i],0, sizeof(timer_node_t));
 			}
 
 			if ( this->tms[i].interval_time.tv_sec != 0 || this->tms[i].interval_time.tv_nsec != 0 )
@@ -364,7 +363,7 @@ dispatch_handlers(private_reactor_t *this, fd_set *read_fds, fd_set *write_fds, 
 			if ( this->ehs[i].eh_ptr->handle_input(this->ehs[i].eh_ptr, this->ehs[i].eh_ptr->get_handle(this->ehs[i].eh_ptr)) < 0)
 			{
 				if ( this->ehs[i].eh_ptr->handle_close )
-					this->ehs[i].eh_ptr->handle_close(this->ehs[i].eh_ptr, EVENT_HANDLER_READ_MASK);
+					this->ehs[i].eh_ptr->handle_close(this->ehs[i].eh_ptr, this->ehs[i].eh_ptr->get_handle(this->ehs[i].eh_ptr),EVENT_HANDLER_READ_MASK);
 
 				this->ehs[i].in_use = 0;
 			}
@@ -377,7 +376,7 @@ dispatch_handlers(private_reactor_t *this, fd_set *read_fds, fd_set *write_fds, 
 			if ( this->ehs[i].eh_ptr->handle_output(this->ehs[i].eh_ptr, this->ehs[i].eh_ptr->get_handle(this->ehs[i].eh_ptr)) < 0)
 			{
 				if ( this->ehs[i].eh_ptr->handle_close )
-					this->ehs[i].eh_ptr->handle_close(this->ehs[i].eh_ptr, EVENT_HANDLER_WRITE_MASK);
+					this->ehs[i].eh_ptr->handle_close(this->ehs[i].eh_ptr, this->ehs[i].eh_ptr->get_handle(this->ehs[i].eh_ptr),EVENT_HANDLER_WRITE_MASK);
 
 				this->ehs[i].in_use = 0;
 			}
@@ -390,7 +389,7 @@ dispatch_handlers(private_reactor_t *this, fd_set *read_fds, fd_set *write_fds, 
 			if ( this->ehs[i].eh_ptr->handle_signal(this->ehs[i].eh_ptr, this->ehs[i].signum) < 0 )
 			{
 				if ( this->ehs[i].eh_ptr->handle_close )
-					this->ehs[i].eh_ptr->handle_close(this->ehs[i].eh_ptr, EVENT_HANDLER_SIGNAL_MASK);
+					this->ehs[i].eh_ptr->handle_close(this->ehs[i].eh_ptr, this->ehs[i].eh_ptr->get_handle(this->ehs[i].eh_ptr),EVENT_HANDLER_SIGNAL_MASK);
 
 				memset(&this->ehs[i], 0, sizeof(event_node_t));
 			}
@@ -410,7 +409,7 @@ remove_handler(private_reactor_t *this, ipt_event_handler_t *eh_ptr, ipt_event_h
 		{
 			if (!( mask & EVENT_HANDLER_DONT_CALL_MASK) )
 			{
-				this->ehs[i].eh_ptr->handle_close(eh_ptr, this->ehs[i].mask);
+				this->ehs[i].eh_ptr->handle_close(eh_ptr, this->ehs[i].eh_ptr->get_handle(this->ehs[i].eh_ptr),this->ehs[i].mask);
 			}
 
 			if ( mask & EVENT_HANDLER_SIGNAL_MASK )

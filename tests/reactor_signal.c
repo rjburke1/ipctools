@@ -37,7 +37,7 @@ int handle_signal(ipt_event_handler_t *this, int signum)
 	return 0;
 }
 
-int handle_close(ipt_event_handler_t *this, ipt_event_handler_mask_t mask)
+int handle_close(ipt_event_handler_t *this, ipt_handle_t h, ipt_event_handler_mask_t mask)
 {
 	ipt_time_value_t one_shot = {WAIT_TIME_BEFORE_SHUTDOWN,0};
 
@@ -58,7 +58,7 @@ ipt_handle_t get_handle(ipt_event_handler_t *this)
 void test_handler_init(struct test_handler *this)
 {
 	this->eh.handle_signal  = (int (*)(ipt_event_handler_t *, int )) handle_signal;
-	this->eh.handle_close   = (int (*)(ipt_event_handler_t *, ipt_event_handler_mask_t mask)) handle_close;
+	this->eh.handle_close   = (int (*)(ipt_event_handler_t *, ipt_handle_t, ipt_event_handler_mask_t mask)) handle_close;
 	this->eh.get_handle     = (ipt_handle_t (*)(ipt_event_handler_t *)) get_handle;
 	this->eh.handle_timeout = (int (*)(ipt_event_handler_t *, const ipt_time_value_t *tv, const void *act)) handle_timeout;
 }

@@ -18,7 +18,7 @@ int handle_input(ipt_event_handler_t *this, ipt_handle_t h)
 	return -1;
 }
 
-int handle_close(ipt_event_handler_t *this, ipt_event_handler_mask_t mask)
+int handle_close(ipt_event_handler_t *this, ipt_handle_t h, ipt_event_handler_mask_t mask)
 {
 	if ( mask & EVENT_HANDLER_READ_MASK )
 	{
@@ -40,7 +40,7 @@ int get_handle(ipt_event_handler_t *this)
 void test_handler_init(struct test_handler *this)
 {
 	this->eh.handle_input = (int (*)(ipt_event_handler_t *, ipt_handle_t h)) handle_input;
-	this->eh.handle_close = (int (*)(ipt_event_handler_t *, ipt_event_handler_mask_t mask)) handle_close;
+	this->eh.handle_close = (int (*)(ipt_event_handler_t *, ipt_handle_t h, ipt_event_handler_mask_t mask)) handle_close;
 	this->eh.get_handle   = (ipt_handle_t (*)(ipt_event_handler_t *)) get_handle;
 	this->eh.set_handle   = (ipt_handle_t (*)(ipt_event_handler_t *, ipt_handle_t h)) set_handle;
 }

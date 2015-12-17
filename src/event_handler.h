@@ -105,7 +105,7 @@ struct ipt_event_handler_t
 	 * @param fd I/O handle
 	 * @param close_mask defines which event triggered the handle_close.
 	 */
-	int (*handle_close)(ipt_event_handler_t *this, ipt_event_handler_mask_t mask);
+	int (*handle_close)(ipt_event_handler_t *this, ipt_handle_t h, ipt_event_handler_mask_t mask);
 
        /**
          * Destroy the reactor. 
