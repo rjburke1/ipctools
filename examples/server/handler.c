@@ -66,7 +66,7 @@ ipt_acceptor_handler_t *ah_ptr = ((ipt_msg_handler_t*)eh_ptr)->ah_ptr;
 	close(h);
 	return 0;
 }
-ipt_msg_handler_t *ipt_msg_handler_create(ipt_acceptor_handler_t *ah_ptr)
+ipt_event_handler_t *ipt_msg_handler_create(ipt_acceptor_handler_t *ah_ptr)
 {
   	ipt_msg_handler_t *this = malloc(sizeof(struct ipt_msg_handler_t));
 
@@ -83,5 +83,5 @@ ipt_msg_handler_t *ipt_msg_handler_create(ipt_acceptor_handler_t *ah_ptr)
 	/* Access parent acceptor that created us */
 	this->ah_ptr = ah_ptr;
 
- 	return this;
+ 	return (ipt_event_handler_t*)&this->eh;
 }

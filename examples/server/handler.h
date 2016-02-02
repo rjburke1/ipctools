@@ -1,5 +1,5 @@
-#ifndef __IPT_BITW_HANDLER_H__
-#define __IPT_BITW_HANDLER_H__
+#ifndef __IPT_MSG_HANDLER_H__
+#define __IPT_MSG_HANDLER_H__
 
 #include "shared_queue.h"
 #include "acceptor_handler.h"
@@ -20,7 +20,7 @@ struct ipt_msg_handler_t
 	ipt_acceptor_handler_t *ah_ptr;
 };
 
-ipt_msg_handler_t *ipt_msg_handler_create(ipt_acceptor_handler_t *);
+ipt_event_handler_t *ipt_msg_handler_create(ipt_acceptor_handler_t *);
 
 
 /**
