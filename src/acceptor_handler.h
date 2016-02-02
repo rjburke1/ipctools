@@ -17,7 +17,7 @@ struct ipt_acceptor_handler_t
 	/* Callback to create connection */
         ipt_event_handler_t * (*create_conn)(ipt_acceptor_handler_t *this);
 
-	/* state. number of active bitw connections */;
+	/* state. number of active connections */;
 	unsigned short num_cons;
 };
 

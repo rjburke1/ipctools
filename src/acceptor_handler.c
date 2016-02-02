@@ -51,7 +51,7 @@ ipt_event_handler_t *con_ptr;
 		return 0;
 	}
 
-	/* Now we need to create the bitw_handler */
+	/* Now we need to create the connection handler */
 	if ( (con_ptr = ah_ptr->create_conn(ah_ptr)) == NULL )
 	{
 		printf("Failed to create connection handler\n");
@@ -66,7 +66,7 @@ ipt_event_handler_t *con_ptr;
 
  	if ( r_ptr->register_handler(r_ptr, con_ptr, EVENT_HANDLER_READ_MASK) < 0 )
         {
-                printf("failed to register bitw handler\n");
+                printf("failed to register connection handler\n");
 		close(sockfd);
                 return 1;
         }
