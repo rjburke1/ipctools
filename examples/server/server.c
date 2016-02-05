@@ -121,6 +121,15 @@ int main(int argc, const char * const argv[])
 		return 1;
 	}
 
+ 	if(setsockopt(sockfd,SOL_SOCKET,(SO_REUSEPORT | SO_REUSEADDR),(char*)&option,sizeof(option)) < 0)
+        {
+
+                printf("setsockopt failed.\n");
+                close(sockfd);
+                return 1;
+        }
+
+
      	bzero((char *) &serv_addr, sizeof(serv_addr));
 
      	serv_addr.sin_family = AF_INET;
@@ -134,13 +143,6 @@ int main(int argc, const char * const argv[])
 		return 1;
 	}
 
-	if(setsockopt(sockfd,SOL_SOCKET,(SO_REUSEPORT | SO_REUSEADDR),(char*)&option,sizeof(option)) < 0)
-	{
-
-    		printf("setsockopt failed\n");
-    		close(sockfd);
-		return 1;
-	}
 
      	if ( listen(sockfd,5) < 0 )
 	{
